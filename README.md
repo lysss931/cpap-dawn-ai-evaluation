@@ -91,35 +91,27 @@ response data.
 
 ## Findings
 
-- `cs_coverage.png`
+![Dot chart comparing how much of the manual's advice Dawn included for each problem, with and without the device name](cs_coverage.png)
 
-  Caption: "Naming the device mostly helped on device-specific problems
-  (Data not sent, SmartStart), but coverage dropped for Black screen."
+*Naming the device mostly helped on device-specific problems (Data not sent, SmartStart), but coverage dropped for Black screen.*
 
-- `cs_issues.png`
+![Grid showing, for each problem, how many of 3 answers referred to the wrong device or assumed an unmentioned mask](cs_issues.png)
 
-  Caption: "Without the device name, 18 of 27 answers referred to the wrong
-  device or assumed a mask the user never mentioned; with it, 9 of 27 did."
+*Without the device name, 18 of 27 answers referred to the wrong device or assumed a mask the user never mentioned; with it, 9 of 27 did.*
 
-- `cs_documents.png`
+![Stacked bars showing which document Dawn's Learn More link pointed to in each condition](cs_documents.png)
 
-  Caption: "Dawn linked the AirSense 11 manual in 0 of 27 answers without the
-  device name and 16 of 27 with it."
+*Dawn linked the AirSense 11 manual in 0 of 27 answers without the device name and 16 of 27 with it.*
 
 ## How I checked my work (automated text analysis in Python)
 
-- `cs_keyterms.png`
+![Dot chart of the share of the manual's key terms found in Dawn's answers](cs_keyterms.png)
 
-  Caption: "A Python keyword search mostly agreed with my hand scores. It
-  matches words, not meaning, so it supports the hand scores rather than
-  replacing them."
+*A Python keyword search mostly agreed with my hand scores. It matches words, not meaning, so it supports the hand scores rather than replacing them.*
 
-- `cs_length.png`
+![Dot chart of average answer length in words, with and without the device name](cs_length.png)
 
-  Caption: "Every answer got longer when the device was named, but longer did
-  not always mean more complete (SmartStop: 94 to 119 words, coverage 27% to
-  33%)."
-
+*Every answer got longer when the device was named, but longer did not always mean more complete (SmartStop: 94 to 119 words, coverage 27% to 33%).*
 ## Limitations
 
 - Exploratory study: 9 problems, 3 tries per problem per wording (54 answers).
