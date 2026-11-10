@@ -1,0 +1,335 @@
+"""Merge final human scores with the response analysis and summarize the results."""
+
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+
+BASE_DIR = Path(__file__).resolve().parent
+HAND_SCORES_PATH = BASE_DIR / "hand_scores.csv"
+RESULTS_PATH = BASE_DIR / "results.csv"
+FINAL_RESULTS_PATH = BASE_DIR / "final_results.csv"
+WORDINGS = ["Plain", "Device named"]
+COLORS = ["#4C78A8", "#F58518"]
+
+# Map the spreadsheet's human-readable column names to convenient Python names.
+HAND_COLUMN_NAMES = {
+    "#": "statement",
+    "Problem": "hand_problem",
+    "Wording": "wording",
+    "Run": "run",
+    "Causes hit": "causes_hit",
+    "Causes total": "causes_total",
+    "Solutions hit": "solutions_hit",
+    "Solutions total": "solutions_total",
+    "Wrong device?": "wrong_device",
+    "Assumed unstated equipment?": "assumed_equipment",
+    "Marketing / boilerplate?": "marketing_boilerplate",
+    "Refers to provider?": "refers_to_provider",
+    "Source cited": "hand_source_cited",
+    "Notes": "notes",
+}
+KEY_COLUMNS = ["statement", "wording", "run"]
+YES_NO_COLUMNS = [
+    "wrong_device",
+    "assumed_equipment",
+    "marketing_boilerplate",
+    "refers_to_provider",
+]
+
+
+def _read_hand_scores() -> pd.DataFrame:
+    """Load the spreadsheet export, normalize its fields, and check its 54 rows."""
+    if not HAND_SCORES_PATH.is_file():
+        raise FileNotFoundError(
+            f"Could not find hand scores: {HAND_SCORES_PATH}. "
+            "Place hand_scores.csv in the project folder and rerun."
+        )
+
+    hand_scores = pd.read_csv(HAND_SCORES_PATH, dtype=str, keep_default_na=False)
+    # Spreadsheet exports may add spaces around headers; trim them before matching.
+    hand_scores.columns = [str(column).strip() for column in hand_scores.columns]
+    missing_columns = set(HAND_COLUMN_NAMES) - set(hand_scores.columns)
+    if missing_columns:
+        raise ValueError(
+            "hand_scores.csv is missing required columns: "
+            + ", ".join(sorted(missing_columns))
+        )
+
+    # Keep only the columns needed for this analysis and give them stable names.
+    hand_scores = hand_scores[list(HAND_COLUMN_NAMES)].rename(
+        columns=HAND_COLUMN_NAMES
+    )
+    for column in ["wording", "hand_problem", "hand_source_cited", "notes"]:
+        hand_scores[column] = hand_scores[column].str.strip()
+    for column in YES_NO_COLUMNS:
+        hand_scores[column] = hand_scores[column].str.strip().str.upper()
+        invalid_values = sorted(set(hand_scores[column]) - {"Y", "N"})
+        if invalid_values:
+            raise ValueError(
+                f"Column {column!r} contains values other than Y/N: {invalid_values}"
+            )
+
+    # Convert the identifiers and score counts to numbers, rejecting malformed cells.
+    numeric_columns = [
+        "statement",
+        "run",
+        "causes_hit",
+        "causes_total",
+        "solutions_hit",
+        "solutions_total",
+    ]
+    for column in numeric_columns:
+        hand_scores[column] = pd.to_numeric(
+            hand_scores[column], errors="raise"
+        ).astype(int)
+
+    if len(hand_scores) != 54:
+        raise ValueError(f"Expected 54 hand-score rows, found {len(hand_scores)}")
+    wording_counts = hand_scores["wording"].value_counts().to_dict()
+    if wording_counts != {"Plain": 27, "Device named": 27}:
+        raise ValueError(
+            "Expected 27 rows for each wording (Plain and Device named); "
+            f"found {wording_counts}"
+        )
+    if set(hand_scores["statement"]) != set(range(1, 10)):
+        raise ValueError("Hand scores must cover statements 1 through 9")
+    if set(hand_scores["run"]) != {1, 2, 3}:
+        raise ValueError("Hand scores must cover runs 1 through 3")
+    if hand_scores.duplicated(KEY_COLUMNS).any():
+        raise ValueError("hand_scores.csv contains duplicate statement/wording/run keys")
+
+    # A hit count cannot be negative or exceed the corresponding checklist total.
+    for hits_column, total_column in [
+        ("causes_hit", "causes_total"),
+        ("solutions_hit", "solutions_total"),
+    ]:
+        invalid_scores = (
+            (hand_scores[hits_column] < 0)
+            | (hand_scores[total_column] < 0)
+            | (hand_scores[hits_column] > hand_scores[total_column])
+        )
+        if invalid_scores.any():
+            raise ValueError(
+                f"Invalid hit/total values in {hits_column} and {total_column}"
+            )
+    if ((hand_scores["causes_total"] + hand_scores["solutions_total"]) <= 0).any():
+        raise ValueError("Each response must have a positive combined manual total")
+    return hand_scores
+
+
+def merge_scores() -> pd.DataFrame:
+    """Join the two files and calculate coverage and the combined issue flag."""
+    hand_scores = _read_hand_scores()
+    if not RESULTS_PATH.is_file():
+        raise FileNotFoundError(f"Could not find analysis results: {RESULTS_PATH}")
+    results = pd.read_csv(RESULTS_PATH, keep_default_na=False)
+    results["statement"] = pd.to_numeric(results["statement"], errors="raise").astype(int)
+    results["run"] = pd.to_numeric(results["run"], errors="raise").astype(int)
+    if results.duplicated(KEY_COLUMNS).any():
+        raise ValueError("results.csv contains duplicate statement/wording/run keys")
+
+    # An outer join exposes missing keys on either side instead of silently dropping them.
+    merged = hand_scores.merge(
+        results,
+        on=KEY_COLUMNS,
+        how="outer",
+        validate="one_to_one",
+        indicator=True,
+        suffixes=("_hand", "_analysis"),
+    )
+    unmatched = merged["_merge"] != "both"
+    if unmatched.any() or len(merged) != 54:
+        examples = merged.loc[unmatched, KEY_COLUMNS + ["_merge"]].head().to_dict("records")
+        raise ValueError(
+            f"Expected all 54 hand-score rows to match results.csv; "
+            f"found {int((~unmatched).sum())} matched. Examples: {examples}"
+        )
+    merged = merged.drop(columns="_merge")
+
+    # Coverage combines the manual's cause and solution checks for each response.
+    total_hits = merged["causes_hit"] + merged["solutions_hit"]
+    total_items = merged["causes_total"] + merged["solutions_total"]
+    merged["coverage"] = total_hits / total_items
+
+    # Mark a response as an issue if either of the two human-scored risk flags is Y.
+    merged["any_issue"] = (
+        (merged["wrong_device"] == "Y") | (merged["assumed_equipment"] == "Y")
+    ).map({True: "Y", False: "N"})
+
+    # The charts say "out of 3", so verify every statement/wording has three runs.
+    run_counts = merged.groupby(["statement", "wording"]).size()
+    if len(run_counts) != 18 or not (run_counts == 3).all():
+        raise ValueError("Expected three runs for each statement and wording")
+    return merged
+
+
+def _add_bar_labels(axis: plt.Axes, percent: bool = False) -> None:
+    """Write a value beside every bar so the chart is readable without estimating."""
+    for bars in axis.containers:
+        for bar in bars:
+            value = bar.get_width()
+            label = f"{value:.1f}%" if percent else f"{value:.0f}"
+            axis.annotate(
+                label,
+                (value, bar.get_y() + bar.get_height() / 2),
+                xytext=(4, 0),
+                textcoords="offset points",
+                va="center",
+                fontsize=8,
+            )
+
+
+def _save_grouped_chart(
+    values: pd.DataFrame,
+    title: str,
+    xlabel: str,
+    filename: str,
+    *,
+    percent: bool = False,
+) -> None:
+    """Save a horizontal grouped bar chart with the two wording types side by side."""
+    axis = values.reindex(columns=WORDINGS, fill_value=0).plot(
+        kind="barh",
+        figsize=(10, max(4, len(values) * 0.55)),
+        color=COLORS,
+        width=0.8,
+    )
+    axis.set_title(title)
+    axis.set_xlabel(xlabel)
+    axis.set_ylabel("")
+    axis.invert_yaxis()
+    axis.legend(title="Wording")
+    axis.grid(axis="x", linestyle=":", alpha=0.5)
+    axis.set_axisbelow(True)
+    _add_bar_labels(axis, percent=percent)
+    plt.tight_layout()
+    plt.savefig(BASE_DIR / filename, dpi=160, bbox_inches="tight")
+    plt.close()
+
+
+def save_charts(merged: pd.DataFrame) -> None:
+    """Build the three requested charts using the short problem names."""
+    # Make a statement-to-short-name lookup and keep statements in numerical order.
+    problem_names = (
+        merged[["statement", "hand_problem"]]
+        .drop_duplicates()
+        .sort_values("statement")
+        .set_index("statement")["hand_problem"]
+    )
+    if problem_names.index.duplicated().any():
+        raise ValueError("Each statement must have one consistent short problem name")
+    labels = [problem_names.loc[number] for number in range(1, 10)]
+
+    # Average the three individual response coverage scores for each problem/wording.
+    coverage = merged.pivot_table(
+        index="statement", columns="wording", values="coverage", aggfunc="mean"
+    ).reindex(range(1, 10))
+    coverage.index = labels
+    _save_grouped_chart(
+        coverage * 100,
+        "Average manual coverage by problem",
+        "Average coverage (%)",
+        "coverage_by_statement.png",
+        percent=True,
+    )
+
+    # Count responses flagged for wrong device or unstated equipment, out of three.
+    issue_counts = merged.assign(
+        issue_count=(merged["any_issue"] == "Y").astype(int)
+    ).pivot_table(
+        index="statement",
+        columns="wording",
+        values="issue_count",
+        aggfunc="sum",
+        fill_value=0,
+    ).reindex(range(1, 10))
+    issue_counts.index = labels
+    _save_grouped_chart(
+        issue_counts,
+        "Responses with an issue by problem",
+        "Responses with issue (out of 3)",
+        "issues_by_statement.png",
+    )
+
+    # Compare total risk and marketing flags by wording across all 27 responses.
+    issue_type_counts = pd.DataFrame(
+        {
+            "Wrong device": [
+                (merged.loc[merged["wording"] == wording, "wrong_device"] == "Y").sum()
+                for wording in WORDINGS
+            ],
+            "Assumed equipment": [
+                (merged.loc[merged["wording"] == wording, "assumed_equipment"] == "Y").sum()
+                for wording in WORDINGS
+            ],
+            "Marketing / boilerplate": [
+                (merged.loc[merged["wording"] == wording, "marketing_boilerplate"] == "Y").sum()
+                for wording in WORDINGS
+            ],
+        },
+        index=WORDINGS,
+    ).T
+    _save_grouped_chart(
+        issue_type_counts,
+        "Issue and marketing counts by wording",
+        "Responses (out of 27)",
+        "issue_types_by_wording.png",
+    )
+
+
+def main() -> None:
+    """Save the merged results, print summaries, and create the charts."""
+    merged = merge_scores()
+    merged.to_csv(FINAL_RESULTS_PATH, index=False)
+
+    # Show the average coverage and number of Y ratings for each wording.
+    summary = merged.groupby("wording").agg(
+        average_coverage=("coverage", "mean"),
+        wrong_device=("wrong_device", lambda values: (values == "Y").sum()),
+        assumed_equipment=("assumed_equipment", lambda values: (values == "Y").sum()),
+        any_issue=("any_issue", lambda values: (values == "Y").sum()),
+        marketing_boilerplate=(
+            "marketing_boilerplate",
+            lambda values: (values == "Y").sum(),
+        ),
+        refers_to_provider=(
+            "refers_to_provider",
+            lambda values: (values == "Y").sum(),
+        ),
+    ).reindex(WORDINGS)
+    summary["average_coverage"] *= 100
+    print("\nSummary by wording (coverage as a percentage):")
+    print(summary.round({"average_coverage": 1}).to_string())
+
+    # Pivot tables make it easy to compare the two wordings statement by statement.
+    coverage_by_statement = merged.pivot_table(
+        index="statement", columns="wording", values="coverage", aggfunc="mean"
+    ) * 100
+    print("\nAverage coverage by statement and wording (%):")
+    print(coverage_by_statement.round(1).reindex(range(1, 10)).to_string())
+
+    issue_by_statement = merged.assign(
+        issue_count=(merged["any_issue"] == "Y").astype(int)
+    ).pivot_table(
+        index="statement",
+        columns="wording",
+        values="issue_count",
+        aggfunc="sum",
+        fill_value=0,
+    )
+    print("\nAny issue by statement and wording (out of 3):")
+    print(issue_by_statement.reindex(range(1, 10), fill_value=0).to_string())
+
+    save_charts(merged)
+    print(f"\nSaved {len(merged)} merged rows to {FINAL_RESULTS_PATH.name}")
+    print("Saved coverage_by_statement.png, issues_by_statement.png, and issue_types_by_wording.png")
+
+
+if __name__ == "__main__":
+    main()

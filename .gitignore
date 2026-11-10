@@ -1,0 +1,20 @@
+# Python virtual environment and local Python artifacts
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local research source and response text
+AI-CPAP Troubleshooting Statements.pdf
+*.numbers
+
+# Generated tabular data may contain full response text; keep it private.
+*.csv
+!hand_scores.csv
+
+# Local Python virtual environment and OS artifacts
+.venv/
+.DS_Store
+
+# Local task prompts and operating-system metadata
+prompt_for_vscode_agent.md
+prompt_update_with_hand_scores.md

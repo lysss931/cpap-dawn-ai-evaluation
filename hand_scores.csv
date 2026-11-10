@@ -1,0 +1,55 @@
+#,Problem,Wording,Run,Manual coverage,Causes hit,Causes total,Solutions hit,Solutions total,Wrong device?,Assumed unstated equipment?,Marketing / boilerplate?,Refers to provider?,Source cited,Notes
+1,Mask leak,Plain,1,0.5,1,1,1,3,N,Y,N,Y,AirFit_Full_Face_20.pdf,Never mentions Mask Fit function or myAir video
+1,Mask leak,Plain,2,0.5,1,1,1,3,N,Y,N,Y,AirFit_Full_Face_20.pdf,Never mentions Mask Fit function or myAir video
+1,Mask leak,Plain,3,0.5,1,1,1,3,N,Y,Y,Y,AirFit_Full_Face_20.pdf,Never mentions Mask Fit function or myAir video
+1,Mask leak,Device named,1,0.5,1,1,1,3,N,Y,Y,Y,AirFit_Full_Face_20.pdf,Broken boilerplate text ('Sleep-assessment append'). Still assumes AirFit F20 after device named
+1,Mask leak,Device named,2,0.5,1,1,1,3,N,Y,Y,Y,AirFit_Full_Face_20.pdf,Still assumes AirFit F20
+1,Mask leak,Device named,3,0.5,1,1,1,3,N,Y,N,Y,AirFit_Full_Face_20.pdf,Still assumes AirFit F20
+2,Dry/blocked nose,Plain,1,1.0,1,1,1,1,N,N,Y,Y,None,
+2,Dry/blocked nose,Plain,2,1.0,1,1,1,1,N,N,Y,Y,None,
+2,Dry/blocked nose,Plain,3,1.0,1,1,1,1,N,N,Y,Y,None,
+2,Dry/blocked nose,Device named,1,1.0,1,1,1,1,N,N,N,Y,Airsense_11.pdf,
+2,Dry/blocked nose,Device named,2,1.0,1,1,1,1,N,N,N,Y,Airsense_11.pdf,
+2,Dry/blocked nose,Device named,3,1.0,1,1,1,1,N,N,Y,Y,Airsense_11.pdf,Answers neighboring problems the user didn't ask about
+3,Water droplets,Plain,1,0.75,1,2,2,2,N,Y,N,Y,AirFit_Full_Face_20.pdf,Heated tube counted as the tube-temperature fix
+3,Water droplets,Plain,2,0.75,1,2,2,2,N,Y,Y,Y,AirFit_Full_Face_20.pdf,Heated tube counted as the tube-temperature fix
+3,Water droplets,Plain,3,1.0,2,2,2,2,N,Y,N,N,AirFit_Full_Face_20.pdf,Heated tube counted as the tube-temperature fix
+3,Water droplets,Device named,1,1.0,2,2,2,2,N,Y,N,Y,AirFit_Full_Face_20.pdf,Heated tube counted as the tube-temperature fix
+3,Water droplets,Device named,2,0.75,1,2,2,2,N,Y,N,Y,AirFit_Full_Face_20.pdf,Heated tube counted as the tube-temperature fix
+3,Water droplets,Device named,3,1.0,2,2,2,2,N,N,Y,Y,None,Heated tube counted as the tube-temperature fix
+4,Dry mouth,Plain,1,1.0,1,1,2,2,N,N,N,Y,None,
+4,Dry mouth,Plain,2,1.0,1,1,2,2,N,N,N,Y,None,
+4,Dry mouth,Plain,3,1.0,1,1,2,2,N,N,Y,Y,None,
+4,Dry mouth,Device named,1,1.0,1,1,2,2,N,N,Y,Y,Airsense_11.pdf,Broken boilerplate text ('Sleep-assessment append')
+4,Dry mouth,Device named,2,1.0,1,1,2,2,N,N,N,Y,Airsense_11.pdf,
+4,Dry mouth,Device named,3,1.0,1,1,2,2,N,N,N,Y,Airsense_11.pdf,Good: makes the advice conditional on the mask type instead of assuming it
+5,Black screen,Plain,1,1.0,1,1,1,1,Y,N,N,Y,None,Instructions match an older device
+5,Black screen,Plain,2,1.0,1,1,1,1,Y,N,N,Y,None,Instructions match an older device
+5,Black screen,Plain,3,1.0,1,1,1,1,Y,N,N,Y,None,Instructions match an older device
+5,Black screen,Device named,1,0.5,0,1,1,1,N,N,N,Y,Airsense_11.pdf,Assumes device is already plugged in; never says check the plug is fully inserted
+5,Black screen,Device named,2,1.0,1,1,1,1,N,N,N,Y,Airsense_11.pdf,
+5,Black screen,Device named,3,1.0,1,1,1,1,N,N,N,Y,Airsense_11.pdf,
+6,Humidifier tub leak,Plain,1,1.0,3,3,3,3,N,N,N,Y,None,
+6,Humidifier tub leak,Plain,2,1.0,3,3,3,3,N,N,Y,Y,None,Pitches the sleep assessment in the opening line
+6,Humidifier tub leak,Plain,3,1.0,3,3,3,3,N,N,N,Y,None,
+6,Humidifier tub leak,Device named,1,1.0,3,3,3,3,N,N,N,Y,Airsense_11.pdf,
+6,Humidifier tub leak,Device named,2,1.0,3,3,3,3,N,N,N,Y,Airsense_11.pdf,Says 'since you already have your diagnosis' (an assumption about the user)
+6,Humidifier tub leak,Device named,3,1.0,3,3,3,3,N,N,N,Y,Airsense_11.pdf,
+7,Data not sent,Plain,1,0.4286,2,3,1,4,Y,N,N,N,Airsense_10.pdf,"Wrong device. No placement guidance, no provider step"
+7,Data not sent,Plain,2,0.7143,2,3,3,4,Y,N,N,Y,Airsense_10.pdf,Wrong device
+7,Data not sent,Plain,3,0.8571,2,3,4,4,Y,N,Y,Y,Airsense_10.pdf,Wrong device
+7,Data not sent,Device named,1,1.0,3,3,4,4,N,N,N,Y,None,
+7,Data not sent,Device named,2,1.0,3,3,4,4,N,N,N,Y,Airsense_11.pdf,Most complete answer in the set
+7,Data not sent,Device named,3,0.7143,2,3,3,4,N,N,N,Y,Airsense_11.pdf,No signal-icon check
+8,SmartStart not starting,Plain,1,0.5,2,2,1,4,N,Y,N,Y,AirFit_Full_Face_10.pdf,Cites an older mask guide. Never says take a deep breath or press Start
+8,SmartStart not starting,Plain,2,0.5,1,2,2,4,N,Y,N,Y,AirFit_Full_Face_10.pdf,Never says take a deep breath or press Start
+8,SmartStart not starting,Plain,3,0.3333,1,2,1,4,N,Y,N,Y,AirFit_Full_Face_10.pdf,Never says take a deep breath or press Start
+8,SmartStart not starting,Device named,1,0.3333,1,2,1,4,N,Y,N,Y,AirFit_Full_Face_20.pdf,
+8,SmartStart not starting,Device named,2,1.0,2,2,4,4,N,N,N,Y,Airsense_11.pdf,"Full manual coverage, plus a claim not in the manual (Airplane Mode affecting SmartStart)"
+8,SmartStart not starting,Device named,3,1.0,2,2,4,4,N,N,N,Y,Airsense_11.pdf,Matches the manual closely
+9,SmartStop not stopping,Plain,1,0.4,1,1,1,4,N,Y,N,Y,AirFit_Full_Face_20.pdf,Contacting a provider counted as 'contact ResMed'; no specific mask guidance
+9,SmartStop not stopping,Plain,2,0.2,0,1,1,4,N,Y,N,Y,AirFit_Full_Face_20.pdf,Contacting a provider counted as 'contact ResMed'; no specific mask guidance
+9,SmartStop not stopping,Plain,3,0.2,0,1,1,4,N,Y,N,Y,AirFit_Full_Face_20.pdf,Contacting a provider counted as 'contact ResMed'; no specific mask guidance
+9,SmartStop not stopping,Device named,1,0.6,1,1,2,4,N,Y,N,Y,AirFit_Full_Face_20.pdf,Contacting a provider counted as 'contact ResMed'; no specific mask guidance
+9,SmartStop not stopping,Device named,2,0.2,0,1,1,4,N,Y,N,Y,AirFit_Full_Face_20.pdf,Contacting a provider counted as 'contact ResMed'; no specific mask guidance
+9,SmartStop not stopping,Device named,3,0.2,0,1,1,4,N,Y,N,Y,AirFit_Full_Face_20.pdf,Contacting a provider counted as 'contact ResMed'; no specific mask guidance
