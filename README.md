@@ -34,9 +34,13 @@ before running extraction.
   `responses.csv`.
 - `analyze.py` measures response lengths and statement-specific key-term
   matches, prints summary tables, and writes `results.csv`.
-- `charts.py` reads `results.csv` and creates four comparison charts.
+- `charts.py` reads `results.csv` and creates `average_words_by_statement.png`,
+  `key_term_match_by_statement.png`, `document_links_by_wording.png`,
+  `document_links_stacked.png`, and `boilerplate_by_statement.png`.
 - `scores.py` joins `hand_scores.csv` with `results.csv`, recalculates manual
-  coverage, prints hand-score summaries, and creates three additional charts.
+  coverage, prints hand-score summaries, and creates
+  `coverage_by_statement.png`, `issues_by_statement.png`,
+  `issue_types_by_wording.png`, `coverage_dumbbell.png`, and `runs_grid.png`.
 - `hand_scores.csv` contains the human ratings used by `scores.py`.
 - `requirements.txt` lists the Python packages used by the scripts.
 - `.gitignore` excludes the PDF, response-data CSVs, spreadsheet files, and
@@ -80,8 +84,12 @@ python scores.py
 
 `scores.py` reads `hand_scores.csv` only from this folder. It writes
 `final_results.csv` and the charts `coverage_by_statement.png`,
-`issues_by_statement.png`, and `issue_types_by_wording.png`.
+`issues_by_statement.png`, `issue_types_by_wording.png`,
+`coverage_dumbbell.png`, and `runs_grid.png`.
 
 The extraction and analysis scripts create `responses.csv` and `results.csv`;
 these CSVs are ignored because they contain response text or derived response
-data. The charts are summary-level aggregate outputs and are included.
+data. The charts are summary-level aggregate outputs and are included:
+`average_words_by_statement.png`, `key_term_match_by_statement.png`,
+`document_links_by_wording.png`, `boilerplate_by_statement.png`, and
+`document_links_stacked.png`, plus the five charts produced by `scores.py`.

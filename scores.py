@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import pandas as pd
 
 
@@ -16,9 +17,17 @@ HAND_SCORES_PATH = BASE_DIR / "hand_scores.csv"
 RESULTS_PATH = BASE_DIR / "results.csv"
 FINAL_RESULTS_PATH = BASE_DIR / "final_results.csv"
 WORDINGS = ["Plain", "Device named"]
-COLORS = ["#9e9e9e", "#1f5fbf"]
+COLORS = ["#6b6b6b", "#1f5fbf"]
 PROBLEM_ORDER = [2, 4, 3, 1, 6, 5, 7, 8, 9]
 CHART_SIZE = (12, 7)
+RUN_COLUMNS = [
+    ("Plain", 1),
+    ("Plain", 2),
+    ("Plain", 3),
+    ("Device named", 1),
+    ("Device named", 2),
+    ("Device named", 3),
+]
 
 # Map the spreadsheet's human-readable column names to convenient Python names.
 HAND_COLUMN_NAMES = {
@@ -174,10 +183,11 @@ def merge_scores() -> pd.DataFrame:
 
 def _add_bar_labels(axis: plt.Axes, percent: bool = False) -> None:
     """Write a value beside every bar so the chart is readable without estimating."""
-    for bars in axis.containers:
+    for series_index, bars in enumerate(axis.containers):
         for bar in bars:
             value = bar.get_width()
-            label = f"{value:.0f}%" if percent else f"{value:.0f}"
+            wording = WORDINGS[series_index]
+            label = f"{value:.0f}% {wording}" if percent else f"{value:.0f} {wording}"
             axis.annotate(
                 label,
                 (value, bar.get_y() + bar.get_height() / 2),
@@ -205,29 +215,22 @@ def _save_grouped_chart(
         ax=axis,
         color=COLORS,
         width=0.8,
+        legend=False,
     )
     axis.set_title(title, fontsize=16, pad=14)
     axis.set_xlabel(xlabel, fontsize=12)
     axis.set_ylabel("")
     axis.invert_yaxis()
     axis.tick_params(axis="both", labelsize=11)
-    axis.legend(
-        title="Wording",
-        fontsize=11,
-        title_fontsize=11,
-        loc="upper left",
-        bbox_to_anchor=(1.03, 1),
-        frameon=False,
-    )
     axis.grid(axis="x", linestyle=":", alpha=0.5)
     axis.set_axisbelow(True)
     maximum = values.to_numpy().max() if not values.empty else 0
-    axis.set_xlim(0, max(105 if percent else 1, maximum * 1.15))
+    axis.set_xlim(0, max(145 if percent else 1, maximum * 1.35))
     _add_bar_labels(axis, percent=percent)
     if divider_after is not None:
         axis.axhline(divider_after + 0.5, color="#bdbdbd", linewidth=1)
     figure.text(0.30, 0.035, caption, ha="left", va="bottom", fontsize=10)
-    figure.subplots_adjust(left=0.30, right=0.78, top=0.86, bottom=0.15)
+    figure.subplots_adjust(left=0.30, right=0.90, top=0.86, bottom=0.15)
     figure.savefig(BASE_DIR / filename, dpi=200)
     plt.close(figure)
 
@@ -301,6 +304,183 @@ def save_charts(merged: pd.DataFrame) -> None:
         "issue_types_by_wording.png",
         caption="n = 27 responses per wording",
     )
+    _save_coverage_dumbbell(merged, problem_names)
+    _save_runs_grid(merged, problem_names)
+
+
+def _save_coverage_dumbbell(
+    merged: pd.DataFrame, problem_names: pd.Series
+) -> None:
+    """Compare mean coverage directly with paired dots, labels, and group headings."""
+    coverage = merged.pivot_table(
+        index="statement", columns="wording", values="coverage", aggfunc="mean"
+    ).reindex(PROBLEM_ORDER)
+    figure, axis = plt.subplots(figsize=CHART_SIZE)
+    row_positions = [0, 1, 2, 3, 4, 5.5, 6.5, 7.5, 8.5]
+    for row_index, statement in enumerate(PROBLEM_ORDER):
+        y_position = row_positions[row_index]
+        plain_value = float(coverage.loc[statement, "Plain"] * 100)
+        named_value = float(coverage.loc[statement, "Device named"] * 100)
+        axis.plot(
+            [plain_value, named_value],
+            [y_position, y_position],
+            color="#bdbdbd",
+            linewidth=1.5,
+            zorder=1,
+        )
+        for wording, value, color, y_offset in [
+            ("Plain", plain_value, COLORS[0], -0.10),
+            ("Device named", named_value, COLORS[1], 0.10),
+        ]:
+            axis.scatter(
+                value,
+                y_position + y_offset,
+                color=color,
+                s=85,
+                zorder=2,
+            )
+            axis.annotate(
+                f"{value:.0f}% {wording}",
+                (value, y_position + y_offset),
+                xytext=(7, 0),
+                textcoords="offset points",
+                va="center",
+                fontsize=9,
+                color=color,
+                fontweight="bold",
+            )
+
+    axis.set_yticks(
+        row_positions,
+        [problem_names.loc[number] for number in PROBLEM_ORDER],
+    )
+    axis.set_xlim(0, 125)
+    axis.set_xticks(range(0, 101, 20), [f"{value}%" for value in range(0, 101, 20)])
+    axis.set_ylim(9.2, -0.8)
+    axis.set_xlabel("Average manual coverage", fontsize=12)
+    axis.set_title(
+        "Naming the device helped most on device-specific problems",
+        fontsize=16,
+        pad=14,
+    )
+    axis.tick_params(axis="both", labelsize=10)
+    axis.grid(axis="x", linestyle=":", alpha=0.5)
+    axis.set_axisbelow(True)
+    axis.axhline(4.75, color="#bdbdbd", linewidth=1)
+    axis.text(
+        50,
+        -0.48,
+        "GENERAL COMFORT",
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="#555555",
+        fontweight="bold",
+    )
+    axis.text(
+        50,
+        5.02,
+        "DEVICE-SPECIFIC",
+        ha="center",
+        va="center",
+        fontsize=9,
+        color="#555555",
+        fontweight="bold",
+    )
+    figure.text(
+        0.30,
+        0.035,
+        "n = 3 runs per wording per problem. Coverage = share of the manual's causes and solutions mentioned.",
+        ha="left",
+        va="bottom",
+        fontsize=9,
+    )
+    figure.subplots_adjust(left=0.30, right=0.94, top=0.86, bottom=0.15)
+    figure.savefig(BASE_DIR / "coverage_dumbbell.png", dpi=200)
+    plt.close(figure)
+
+
+def _save_runs_grid(merged: pd.DataFrame, problem_names: pd.Series) -> None:
+    """Display every response's coverage in a heatmap grid and flag issue rows."""
+    ordered = merged.copy()
+    ordered["statement"] = pd.Categorical(
+        ordered["statement"], categories=PROBLEM_ORDER, ordered=True
+    )
+    ordered["wording"] = pd.Categorical(
+        ordered["wording"], categories=WORDINGS, ordered=True
+    )
+    ordered = ordered.sort_values(["statement", "wording", "run"])
+    coverage_values = ordered["coverage"].to_numpy().reshape(9, 6)
+    issues = (ordered["any_issue"] == "Y").to_numpy().reshape(9, 6)
+
+    figure, axis = plt.subplots(figsize=CHART_SIZE)
+    color_map = plt.get_cmap("Blues")
+    for row_index in range(9):
+        for column_index in range(6):
+            value = float(coverage_values[row_index, column_index])
+            color = color_map(0.15 + value * 0.75)
+            axis.add_patch(
+                Rectangle(
+                    (column_index - 0.48, row_index - 0.46),
+                    0.96,
+                    0.92,
+                    facecolor=color,
+                    edgecolor="white",
+                    linewidth=1,
+                )
+            )
+            text_color = "white" if value >= 0.65 else "#111111"
+            axis.text(
+                column_index,
+                row_index,
+                f"{value * 100:.0f}%",
+                ha="center",
+                va="center",
+                fontsize=11,
+                color=text_color,
+                fontweight="bold",
+            )
+            if issues[row_index, column_index]:
+                axis.text(
+                    column_index + 0.36,
+                    row_index - 0.33,
+                    "!",
+                    ha="center",
+                    va="center",
+                    fontsize=9,
+                    color="black",
+                    fontweight="bold",
+                    bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.5},
+                )
+
+    axis.set_xlim(-1.65, 5.55)
+    axis.set_ylim(8.55, -1.45)
+    axis.set_xticks(range(6), ["1", "2", "3", "1", "2", "3"])
+    axis.xaxis.tick_top()
+    axis.tick_params(axis="x", labelsize=11, length=0, pad=5)
+    axis.set_yticks(
+        range(9),
+        [problem_names.loc[number] for number in PROBLEM_ORDER],
+    )
+    axis.tick_params(axis="y", labelsize=10, length=0)
+    axis.text(1, -1.12, "PLAIN", ha="center", va="center", fontsize=11, fontweight="bold", color=COLORS[0])
+    axis.text(4, -1.12, "DEVICE NAMED", ha="center", va="center", fontsize=11, fontweight="bold", color=COLORS[1])
+    axis.axvline(2.5, color="#777777", linewidth=1)
+    axis.axhline(4.5, color="#bdbdbd", linewidth=1)
+    axis.set_title("Coverage and issues for every run", fontsize=16, pad=50)
+    for spine in axis.spines.values():
+        spine.set_visible(False)
+    figure.text(
+        0.30,
+        0.035,
+        "Each cell is one Dawn response. ! = wrong device or assumed mask.",
+        ha="left",
+        va="bottom",
+        fontsize=10,
+    )
+    figure.subplots_adjust(left=0.30, right=0.94, top=0.79, bottom=0.15)
+    figure.savefig(BASE_DIR / "runs_grid.png", dpi=200)
+    plt.close(figure)
 
 
 def main() -> None:

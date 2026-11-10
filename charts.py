@@ -8,13 +8,21 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 import pandas as pd
 
 
 BASE_DIR = Path(__file__).resolve().parent
 INPUT_PATH = BASE_DIR / "results.csv"
 WORDINGS = ["Plain", "Device named"]
-COLORS = ["#9e9e9e", "#1f5fbf"]
+COLORS = ["#6b6b6b", "#1f5fbf"]
+DOCUMENTS = [
+    "AirSense 11 manual",
+    "AirSense 10 manual",
+    "AirFit mask guide",
+    "None",
+]
+DOCUMENT_COLORS = ["#0072B2", "#E69F00", "#009E73", "#CC79A7"]
 PROBLEM_NAMES = {
     1: "Mask leak",
     2: "Dry/blocked nose",
@@ -61,31 +69,25 @@ def save_grouped_bar(
         color=COLORS,
         width=0.8,
         ax=axis,
+        legend=False,
     )
     axis.set_title(title, fontsize=16, pad=14)
     axis.set_xlabel(xlabel, fontsize=12)
     axis.set_ylabel("")
     axis.invert_yaxis()
     axis.tick_params(axis="both", labelsize=11)
-    axis.legend(
-        title="Wording",
-        fontsize=11,
-        title_fontsize=11,
-        loc="upper left",
-        bbox_to_anchor=(1.03, 1),
-        frameon=False,
-    )
     axis.grid(axis="x", linestyle=":", alpha=0.5)
     axis.set_axisbelow(True)
 
     # Leave room at the right for the legend, at the left for problem names,
     # and below the plot for the sample-size caption.
     maximum = data.to_numpy().max() if not data.empty else 0
-    axis.set_xlim(0, max(105 if percent else 1, maximum * 1.15))
-    for bars in axis.containers:
+    axis.set_xlim(0, max(145 if percent else 1, maximum * 1.35))
+    for series_index, bars in enumerate(axis.containers):
         for bar in bars:
             value = bar.get_width()
-            label = f"{value:.0f}%" if percent else f"{value:.0f}"
+            wording = WORDINGS[series_index]
+            label = f"{value:.0f}% {wording}" if percent else f"{value:.0f} {wording}"
             axis.annotate(
                 label,
                 (value, bar.get_y() + bar.get_height() / 2),
@@ -99,6 +101,99 @@ def save_grouped_bar(
     figure.text(0.30, 0.035, caption, ha="left", va="bottom", fontsize=10)
     figure.subplots_adjust(left=0.30, right=0.78, top=0.86, bottom=0.15)
     figure.savefig(BASE_DIR / filename, dpi=200)
+    plt.close(figure)
+
+
+def save_document_links_stacked(results: pd.DataFrame) -> None:
+    """Create the 100% stacked chart and show each document count in its segment."""
+    counts = results.pivot_table(
+        index="wording",
+        columns="document_category",
+        values="statement",
+        aggfunc="count",
+        fill_value=0,
+    ).reindex(index=WORDINGS, columns=DOCUMENTS, fill_value=0)
+    shares = counts.div(counts.sum(axis=1), axis=0)
+
+    figure, axis = plt.subplots(figsize=CHART_SIZE)
+    vertical_positions = [1, 0]
+    height = 0.55
+    for row_index, wording in enumerate(WORDINGS):
+        y_position = vertical_positions[row_index]
+        left = 0.0
+        for document, color in zip(DOCUMENTS, DOCUMENT_COLORS):
+            share = float(shares.loc[wording, document])
+            count = int(counts.loc[wording, document])
+            axis.barh(
+                y_position,
+                share * 100,
+                left=left * 100,
+                height=height,
+                color=color,
+                edgecolor="white",
+                linewidth=1,
+            )
+            if count:
+                text_color = "white" if document == "AirSense 11 manual" else "black"
+                axis.text(
+                    (left + share / 2) * 100,
+                    y_position,
+                    str(count),
+                    ha="center",
+                    va="center",
+                    color=text_color,
+                    fontsize=12,
+                    fontweight="bold",
+                )
+            else:
+                # Keep zero-count categories visible at their boundary without
+                # pretending they occupy space in the 100% bar.
+                axis.annotate(
+                    "0",
+                    (left * 100, y_position),
+                    xytext=(0, -23 if row_index == 0 else 23),
+                    textcoords="offset points",
+                    ha="center",
+                    va="center",
+                    fontsize=10,
+                    bbox={"facecolor": "white", "edgecolor": "none", "pad": 1},
+                )
+            left += share
+
+    axis.set_yticks(vertical_positions, WORDINGS)
+    axis.set_xlim(0, 100)
+    axis.set_xticks(range(0, 101, 20), [f"{value}%" for value in range(0, 101, 20)])
+    axis.set_xlabel("Share of responses", fontsize=12)
+    axis.set_title(
+        "Dawn linked the AirSense 11 manual only when the device was named",
+        fontsize=16,
+        pad=14,
+    )
+    axis.tick_params(axis="both", labelsize=11)
+    axis.grid(axis="x", linestyle=":", alpha=0.5)
+    axis.set_axisbelow(True)
+    axis.legend(
+        handles=[
+            Patch(facecolor=color, label=document)
+            for document, color in zip(DOCUMENTS, DOCUMENT_COLORS)
+        ],
+        title="Document",
+        fontsize=10,
+        title_fontsize=11,
+        loc="upper left",
+        bbox_to_anchor=(1.03, 1),
+        frameon=False,
+    )
+    figure.text(
+        0.30,
+        0.035,
+        "n = 27 responses per wording",
+        ha="left",
+        va="bottom",
+        fontsize=10,
+    )
+    figure.subplots_adjust(left=0.30, right=0.76, top=0.84, bottom=0.18)
+    figure.savefig(BASE_DIR / "document_links_stacked.png", dpi=200)
     plt.close(figure)
 
 
@@ -142,10 +237,7 @@ def main() -> None:
         values="statement",
         aggfunc="count",
         fill_value=0,
-    ).reindex(
-        ["AirSense 11 manual", "AirSense 10 manual", "AirFit mask guide", "None"],
-        fill_value=0,
-    )
+    ).reindex(DOCUMENTS, fill_value=0)
     save_grouped_bar(
         document_counts,
         "Dawn linked the AirSense 11 manual only when the device was named",
@@ -153,6 +245,7 @@ def main() -> None:
         "document_links_by_wording.png",
         caption="n = 27 responses per wording",
     )
+    save_document_links_stacked(results)
 
     # Sum the Y/N flag to show boilerplate response counts out of three runs.
     boilerplate = results.assign(
@@ -172,7 +265,7 @@ def main() -> None:
         "boilerplate_by_statement.png",
         divider_after=4,
     )
-    print("Saved four charts in the project folder.")
+    print("Saved five charts in the project folder.")
 
 
 if __name__ == "__main__":
