@@ -4,7 +4,7 @@
 
 Part of a human factors portfolio case study evaluating whether Resmed’s AI assistant, Dawn, gives the same troubleshooting guidance as the Resmed AirSense 11 user manual.
 
-ine troubleshooting problem statements from the manual (p.18) were each entered into Dawn under two conditions:
+Nine troubleshooting problem statements from the manual (p.18) were each entered into Dawn under two conditions:
 
 - **Problem only:** the problem statement word for word from the manual (3 runs)
 - **Problem + device name:** the same statement followed by “I have Resmed Airsense 11 CPAP machine.” (3 runs)
