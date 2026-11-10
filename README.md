@@ -2,21 +2,20 @@
 
 ## About
 
-Part of a human factors portfolio case study evaluating whether Resmed's AI
-assistant, Dawn, gives the same troubleshooting guidance as the Resmed AirSense
-11 user manual. Nine troubleshooting statements from the manual (p.18) were
-entered into Dawn 3 times each, word for word and with the device named, for 54
-responses. Each response was scored against the manual's causes and solutions.
+Part of a human factors portfolio case study evaluating whether Resmed’s AI assistant, Dawn, gives the same troubleshooting guidance as the Resmed AirSense 11 user manual.
 
-**Author:** Alyssa Mendes, MS Human Factors student, Embry-Riddle Aeronautical
-University
+Nine troubleshooting problem statements from the manual (p.18) were each entered into Dawn under two conditions:
 
-The analysis scripts were developed with AI coding assistants (Claude, GitHub
-Copilot) and checked against hand-calculated expected results. Hand scores were
-drafted with AI assistance using predefined yes/no rules and reviewed by the
-author. Independent student project, not affiliated with or endorsed by
-Resmed. Responses were collected in November 2026; Dawn's answers may have
-changed since.
+Plain: the problem statement word for word from the manual (3 runs)
+Device named: the same statement followed by “I have Resmed Airsense 11 CPAP machine.” (3 runs)
+
+That’s 9 statements × 2 conditions × 3 runs = 54 responses, each scored against the manual’s causes and solutions.
+
+Author: Alyssa Mendes, MS Human Factors student, Embry-Riddle Aeronautical University
+
+My role: I designed the study, collected all 54 responses, built the answer key from the AirSense 11 manual, and made the final scoring decisions. An AI assistant (Claude) applied the yes/no scoring rules for a first-pass draft. I reviewed the borderline cases and revised four of the rules (for example, counting “use a heated tube” as addressing tube temperature) before finalizing the scores. The analysis scripts were developed with AI coding assistants (Claude, GitHub Copilot) and checked against hand-calculated expected results.
+
+This is an independent personal project. It was not conducted through, sponsored by, or reviewed by Embry-Riddle, and is not affiliated with or endorsed by Resmed. Responses were collected in November 2026; Dawn’s answers may have changed since.
 
 This project extracts 54 troubleshooting responses from a PDF, measures each
 response's length and key-term coverage, and produces summary tables and charts.
