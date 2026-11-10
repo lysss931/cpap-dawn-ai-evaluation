@@ -6,16 +6,29 @@ Part of a human factors portfolio case study evaluating whether Resmed’s AI as
 
 Nine troubleshooting problem statements from the manual (p.18) were each entered into Dawn under two conditions:
 
-Plain: the problem statement word for word from the manual (3 runs)
-Device named: the same statement followed by “I have Resmed Airsense 11 CPAP machine.” (3 runs)
+Each statement was entered into Dawn under two conditions:
+
+- Plain: the problem statement word for word from the manual (3 runs)
+- Device named: the same statement followed by “I have Resmed Airsense 11 CPAP machine.” (3 runs)
 
 That’s 9 statements × 2 conditions × 3 runs = 54 responses, each scored against the manual’s causes and solutions.
 
-Author: Alyssa Mendes, MS Human Factors student, Embry-Riddle Aeronautical University
+**Author:** Alyssa Mendes, MS Human Factors student, Embry-Riddle Aeronautical University
 
-My role: I designed the study, collected all 54 responses, built the answer key from the AirSense 11 manual, and made the final scoring decisions. An AI assistant (Claude) applied the yes/no scoring rules for a first-pass draft. I reviewed the borderline cases and revised four of the rules (for example, counting “use a heated tube” as addressing tube temperature) before finalizing the scores. The analysis scripts were developed with AI coding assistants (Claude, GitHub Copilot) and checked against hand-calculated expected results.
+**My role:** I designed the study, collected all 54 responses, built the answer
+key from the AirSense 11 manual, and made the final scoring decisions. An AI
+assistant (Claude) applied the predefined yes/no scoring rules for a first-pass
+draft. I reviewed the borderline cases and revised four of the rules (for
+example, counting “use a heated tube” as addressing tube temperature) before
+finalizing the scores.
 
-This is an independent personal project. It was not conducted through, sponsored by, or reviewed by Embry-Riddle, and is not affiliated with or endorsed by Resmed. Responses were collected in November 2026; Dawn’s answers may have changed since.
+The analysis scripts were developed with AI coding assistants (Claude, GitHub
+Copilot) and checked against hand-calculated expected results. Hand scores were
+drafted with AI assistance using predefined yes/no rules and reviewed by the
+author. This is an independent student project, not affiliated with or endorsed
+by ResMed, and not conducted through, sponsored by, or reviewed by Embry-Riddle
+Aeronautical University. Responses were collected in November 2026; Dawn's
+answers may have changed since.
 
 This project extracts 54 troubleshooting responses from a PDF, measures each
 response's length and key-term coverage, and produces summary tables and charts.
@@ -33,14 +46,11 @@ before running extraction.
   `responses.csv`.
 - `analyze.py` measures response lengths and statement-specific key-term
   matches, prints summary tables, and writes `results.csv`.
-- `charts.py` reads `results.csv` and creates `average_words_by_statement.png`,
-  `key_term_match_by_statement.png`, `document_links_by_wording.png`,
-  `document_links_stacked.png`, and `boilerplate_by_statement.png`.
+- `case_study_charts.py` reads `hand_scores.csv` and `results.csv`, then creates
+  the five case-study charts listed below.
 - `scores.py` joins `hand_scores.csv` with `results.csv`, recalculates manual
-  coverage, prints hand-score summaries, and creates
-  `coverage_by_statement.png`, `issues_by_statement.png`,
-  `issue_types_by_wording.png`, `coverage_dumbbell.png`, and `runs_grid.png`.
-- `hand_scores.csv` contains the human ratings used by `scores.py`.
+  coverage, and prints hand-score summary tables.
+- `hand_scores.csv` contains the human ratings used by the case-study charts.
 - `requirements.txt` lists the Python packages used by the scripts.
 - `.gitignore` excludes the PDF, response-data CSVs, spreadsheet files, and
   virtual environment while allowing the hand scores and chart PNGs.
@@ -63,32 +73,62 @@ On Windows, activate the environment with:
 ```
 
 Place the source PDF, named `AI-CPAP Troubleshooting Statements.pdf`, in this
-folder. The included `hand_scores.csv` is used by the scoring step.
+folder. The included `hand_scores.csv` is used by the charting step.
 
-## Run the scripts
+## How to run
 
-Run the response extraction, analysis, and charting scripts in order:
+Run these scripts in order from the project folder:
 
 ```bash
 python extract.py
 python analyze.py
-python charts.py
+python case_study_charts.py
 ```
 
-To merge the human scores after `results.csv` has been created, run:
+The extraction and analysis scripts create `responses.csv` and `results.csv`.
+These generated CSVs are ignored because they contain response text or derived
+response data.
 
-```bash
-python scores.py
-```
+## Findings
 
-`scores.py` reads `hand_scores.csv` only from this folder. It writes
-`final_results.csv` and the charts `coverage_by_statement.png`,
-`issues_by_statement.png`, `issue_types_by_wording.png`,
-`coverage_dumbbell.png`, and `runs_grid.png`.
+- `cs_coverage.png`
 
-The extraction and analysis scripts create `responses.csv` and `results.csv`;
-these CSVs are ignored because they contain response text or derived response
-data. The charts are summary-level aggregate outputs and are included:
-`average_words_by_statement.png`, `key_term_match_by_statement.png`,
-`document_links_by_wording.png`, `boilerplate_by_statement.png`, and
-`document_links_stacked.png`, plus the five charts produced by `scores.py`.
+  Caption: "Naming the device mostly helped on device-specific problems
+  (Data not sent, SmartStart), but coverage dropped for Black screen."
+
+- `cs_issues.png`
+
+  Caption: "Without the device name, 18 of 27 answers referred to the wrong
+  device or assumed a mask the user never mentioned; with it, 9 of 27 did."
+
+- `cs_documents.png`
+
+  Caption: "Dawn linked the AirSense 11 manual in 0 of 27 answers without the
+  device name and 16 of 27 with it."
+
+## How I checked my work (automated text analysis in Python)
+
+- `cs_keyterms.png`
+
+  Caption: "A Python keyword search mostly agreed with my hand scores. It
+  matches words, not meaning, so it supports the hand scores rather than
+  replacing them."
+
+- `cs_length.png`
+
+  Caption: "Every answer got longer when the device was named, but longer did
+  not always mean more complete (SmartStop: 94 to 119 words, coverage 27% to
+  33%)."
+
+## Limitations
+
+- Exploratory study: 9 problems, 3 tries per problem per wording (54 answers).
+  Differences were not statistically significant at this sample size; results
+  are patterns to test, not proven effects.
+- Scored against one source (the AirSense 11 user manual, page 18
+  troubleshooting table).
+- Dawn's answers can change over time; responses were collected November 2026.
+- Severity of potential harms has not been clinically reviewed.
+
+The Python analysis excludes a promotional sleep-assessment paragraph Dawn
+added to 13 of 54 answers (excluded from word counts).
