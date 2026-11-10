@@ -1,5 +1,23 @@
 # CPAP Troubleshooting Response Analysis
 
+## About
+
+Part of a human factors portfolio case study evaluating whether Resmed's AI
+assistant, Dawn, gives the same troubleshooting guidance as the Resmed AirSense
+11 user manual. Nine troubleshooting statements from the manual (p.18) were
+entered into Dawn 3 times each, word for word and with the device named, for 54
+responses. Each response was scored against the manual's causes and solutions.
+
+**Author:** Alyssa Mendes, MS Human Factors student, Embry-Riddle Aeronautical
+University
+
+The analysis scripts were developed with AI coding assistants (Claude, GitHub
+Copilot) and checked against hand-calculated expected results. Hand scores were
+drafted with AI assistance using predefined yes/no rules and reviewed by the
+author. Independent student project, not affiliated with or endorsed by
+Resmed. Responses were collected in November 2026; Dawn's answers may have
+changed since.
+
 This project extracts 54 troubleshooting responses from a PDF, measures each
 response's length and key-term coverage, and produces summary tables and charts.
 A separate scoring script combines the analysis with human-entered hand scores
@@ -67,11 +85,3 @@ python scores.py
 The extraction and analysis scripts create `responses.csv` and `results.csv`;
 these CSVs are ignored because they contain response text or derived response
 data. The charts are summary-level aggregate outputs and are included.
-
-## Validation and AI assistance
-
-The analysis was developed with AI coding assistants and checked against the
-expected results in the project instructions, including response counts,
-summary metrics, hand-score totals, and representative extracted text. The
-hand-score pipeline's reported totals and statement-level summaries matched
-those expected results during validation.

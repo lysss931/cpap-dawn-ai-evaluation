@@ -12,7 +12,6 @@ AI-CPAP Troubleshooting Statements.pdf
 !hand_scores.csv
 
 # Local Python virtual environment and OS artifacts
-.venv/
 .DS_Store
 
 # Local task prompts and operating-system metadata

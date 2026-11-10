@@ -1,6 +1,7 @@
 """Merge final human scores with the response analysis and summarize the results."""
 
 from pathlib import Path
+from typing import Optional
 
 import matplotlib
 
@@ -15,7 +16,9 @@ HAND_SCORES_PATH = BASE_DIR / "hand_scores.csv"
 RESULTS_PATH = BASE_DIR / "results.csv"
 FINAL_RESULTS_PATH = BASE_DIR / "final_results.csv"
 WORDINGS = ["Plain", "Device named"]
-COLORS = ["#4C78A8", "#F58518"]
+COLORS = ["#9e9e9e", "#1f5fbf"]
+PROBLEM_ORDER = [2, 4, 3, 1, 6, 5, 7, 8, 9]
+CHART_SIZE = (12, 7)
 
 # Map the spreadsheet's human-readable column names to convenient Python names.
 HAND_COLUMN_NAMES = {
@@ -174,14 +177,14 @@ def _add_bar_labels(axis: plt.Axes, percent: bool = False) -> None:
     for bars in axis.containers:
         for bar in bars:
             value = bar.get_width()
-            label = f"{value:.1f}%" if percent else f"{value:.0f}"
+            label = f"{value:.0f}%" if percent else f"{value:.0f}"
             axis.annotate(
                 label,
                 (value, bar.get_y() + bar.get_height() / 2),
                 xytext=(4, 0),
                 textcoords="offset points",
                 va="center",
-                fontsize=8,
+                fontsize=10,
             )
 
 
@@ -192,25 +195,41 @@ def _save_grouped_chart(
     filename: str,
     *,
     percent: bool = False,
+    divider_after: Optional[int] = None,
+    caption: str = "n = 3 runs per wording per problem",
 ) -> None:
     """Save a horizontal grouped bar chart with the two wording types side by side."""
+    figure, axis = plt.subplots(figsize=CHART_SIZE)
     axis = values.reindex(columns=WORDINGS, fill_value=0).plot(
         kind="barh",
-        figsize=(10, max(4, len(values) * 0.55)),
+        ax=axis,
         color=COLORS,
         width=0.8,
     )
-    axis.set_title(title)
-    axis.set_xlabel(xlabel)
+    axis.set_title(title, fontsize=16, pad=14)
+    axis.set_xlabel(xlabel, fontsize=12)
     axis.set_ylabel("")
     axis.invert_yaxis()
-    axis.legend(title="Wording")
+    axis.tick_params(axis="both", labelsize=11)
+    axis.legend(
+        title="Wording",
+        fontsize=11,
+        title_fontsize=11,
+        loc="upper left",
+        bbox_to_anchor=(1.03, 1),
+        frameon=False,
+    )
     axis.grid(axis="x", linestyle=":", alpha=0.5)
     axis.set_axisbelow(True)
+    maximum = values.to_numpy().max() if not values.empty else 0
+    axis.set_xlim(0, max(105 if percent else 1, maximum * 1.15))
     _add_bar_labels(axis, percent=percent)
-    plt.tight_layout()
-    plt.savefig(BASE_DIR / filename, dpi=160, bbox_inches="tight")
-    plt.close()
+    if divider_after is not None:
+        axis.axhline(divider_after + 0.5, color="#bdbdbd", linewidth=1)
+    figure.text(0.30, 0.035, caption, ha="left", va="bottom", fontsize=10)
+    figure.subplots_adjust(left=0.30, right=0.78, top=0.86, bottom=0.15)
+    figure.savefig(BASE_DIR / filename, dpi=200)
+    plt.close(figure)
 
 
 def save_charts(merged: pd.DataFrame) -> None:
@@ -224,19 +243,18 @@ def save_charts(merged: pd.DataFrame) -> None:
     )
     if problem_names.index.duplicated().any():
         raise ValueError("Each statement must have one consistent short problem name")
-    labels = [problem_names.loc[number] for number in range(1, 10)]
-
     # Average the three individual response coverage scores for each problem/wording.
     coverage = merged.pivot_table(
         index="statement", columns="wording", values="coverage", aggfunc="mean"
-    ).reindex(range(1, 10))
-    coverage.index = labels
+    ).reindex(PROBLEM_ORDER)
+    coverage.index = [problem_names.loc[number] for number in PROBLEM_ORDER]
     _save_grouped_chart(
         coverage * 100,
-        "Average manual coverage by problem",
+        "Naming the device helped most on device-specific problems",
         "Average coverage (%)",
         "coverage_by_statement.png",
         percent=True,
+        divider_after=4,
     )
 
     # Count responses flagged for wrong device or unstated equipment, out of three.
@@ -248,13 +266,14 @@ def save_charts(merged: pd.DataFrame) -> None:
         values="issue_count",
         aggfunc="sum",
         fill_value=0,
-    ).reindex(range(1, 10))
-    issue_counts.index = labels
+    ).reindex(PROBLEM_ORDER)
+    issue_counts.index = [problem_names.loc[number] for number in PROBLEM_ORDER]
     _save_grouped_chart(
         issue_counts,
         "Responses with an issue by problem",
         "Responses with issue (out of 3)",
         "issues_by_statement.png",
+        divider_after=4,
     )
 
     # Compare total risk and marketing flags by wording across all 27 responses.
@@ -280,6 +299,7 @@ def save_charts(merged: pd.DataFrame) -> None:
         "Issue and marketing counts by wording",
         "Responses (out of 27)",
         "issue_types_by_wording.png",
+        caption="n = 27 responses per wording",
     )
 
 
