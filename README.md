@@ -10,7 +10,7 @@ The purpose of this case study was to evaluate a user interface, AI online custo
 
 ## Method
 
-For the ResMed AirSense 11, the user manual serves as the IFU. On page 18, the user manual lists troubleshooting statements. Each of these statements has causes and possible solutions to help patients who are experiencing difficulties with their devices. Nine of these problem statements were entered into ResMed's Dawn AI under two conditions, each repeated three times:
+For the ResMed AirSense 11, the user guide serves as the IFU. On page 18, the user guide lists troubleshooting statements. Each of these statements has causes and possible solutions to help patients who are experiencing difficulties with their devices. Nine of these problem statements were entered into ResMed's Dawn AI under two conditions, each repeated three times:
 
 - **Problem only:** The troubleshooting/problem statement word for word from the manual.
 - **Problem + device name:** The same troubleshooting/problem statement followed by "I have Resmed Airsense 11 CPAP machine."
@@ -23,7 +23,7 @@ Responses were collected in November 2026. Since then, Dawn's programming may ha
 
 ## My role
 
-I designed the case study. I used the user manual to list the problem statements, possible causes, and possible solutions. I collected and recorded 54 responses using ResMed's official website. I used a private Safari window on a MacBook Pro. Each time, I googled "ResMed" as customers would, clicked on the ResMed website, denied the cookies, clicked on the bottom right button (where there are two sparkle icons), and agreed to the terms and conditions for Dawn AI. After the statement was entered, I pressed enter and copied the response. I then closed the tab and restarted to minimize the risk of Dawn having a stored memory. It was not possible to confirm that Dawn did not have stored memory. After collecting the 54 responses, I built an answer key. I used Claude AI to do a yes/no scoring of each response. Afterwards, I went through each one and made changes depending on whether I agreed with the scoring. One example was Claude AI saying that "use a heated tube" did not address the tube temperature. I disagreed and changed the scoring to count it.
+I designed the case study. I used the user guide to list the problem statements, possible causes, and possible solutions. I collected and recorded 54 responses using ResMed's official website. I used a private Safari window on a MacBook Pro. Each time, I googled "ResMed" as customers would, clicked on the ResMed website, denied the cookies, clicked on the bottom right button (where there are two sparkle icons), and agreed to the terms and conditions for Dawn AI. After the statement was entered, I pressed enter and copied the response. I then closed the tab and restarted to minimize the risk of Dawn having a stored memory. It was not possible to confirm that Dawn did not have stored memory. After collecting the 54 responses, I built an answer key. I used Claude AI to do a yes/no scoring of each response. Afterwards, I went through each one and made changes depending on whether I agreed with the scoring. One example was Claude AI saying that "use a heated tube" did not address the tube temperature. I disagreed and changed the scoring to count it.
 
 The analysis scripts were developed with AI coding assistants (Claude, GitHub Copilot) and checked against my own expected results and scoring. The purpose of using these AI assistants was to build skills using AI tools. I used my own checks on the output to analyze AI limitations. I applied my knowledge of human factors and research design.
 
@@ -39,7 +39,7 @@ The analysis scripts were developed with AI coding assistants (Claude, GitHub Co
 
 ![Stacked bars showing which document Dawn's Learn More link pointed to in each condition](cs_documents.png)
 
-*Dawn linked the AirSense 11 manual in 0 of 27 answers without the device name and 16 of 27 with it.*
+*Dawn linked the AirSense 11 user guide in 0 of 27 answers without the device name and 16 of 27 with it.*
 
 ## How I checked my work (automated text analysis in Python)
 
@@ -56,7 +56,7 @@ The analysis scripts were developed with AI coding assistants (Claude, GitHub Co
 - Exploratory study: 9 problems, 3 tries per problem per wording (54 answers).
   Differences were not statistically significant at this sample size; results
   are patterns to test, not proven effects.
-- Scored against one source (the AirSense 11 user manual, page 18
+- Scored against one source (the AirSense 11 user guide, page 18
   troubleshooting table).
 - Dawn's answers can change over time; responses were collected November 2026.
 - Severity of potential harms has not been clinically reviewed.
@@ -68,7 +68,7 @@ added to 13 of 54 answers.
 
 This project extracts 54 troubleshooting/problem responses from a PDF of the collected responses, measures each response's length and key-term coverage, and produces summary tables. A separate scoring script combines the analysis with human-entered hand scores to calculate manual coverage and issue counts, and `case_study_charts.py` creates the charts.
 
-The source PDFs (the user manual and the collected responses) and generated response-data CSVs are excluded from the repository because they contain source material or response text. The hand-score file and chart images are included. Keep the source PDFs in this folder locally before running extraction.
+The source PDFs (the user guide and the collected responses) and generated response-data CSVs are excluded from the repository because they contain source material or response text. The hand-score file and chart images are included. Keep the source PDFs in this folder locally before running extraction.
 
 ### Files
 
